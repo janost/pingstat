@@ -1,0 +1,9 @@
+[Unit]
+Description=Pingstat daemon
+
+[Service]
+Type=simple
+ExecStart=/opt/pingstat/pingstat
+
+[Install]
+WantedBy=multi-user.target
