@@ -5,23 +5,18 @@
 extern crate serde_derive;
 
 extern crate rocket;
+extern crate rocket_contrib;
 extern crate oping;
 extern crate rusqlite;
 extern crate time;
 extern crate serde;
 extern crate serde_json;
 
-#[macro_use] extern crate rocket_contrib;
-
-use std::collections::HashMap;
 use std::thread;
-use std::sync::mpsc;
 use std::time::Duration;
-use oping::{Ping, PingResult};
-use time::Timespec;
+use oping::Ping;
 use rusqlite::Connection;
-use rocket_contrib::{JSON, Value};
-use serde::ser::{Serialize, Serializer, SerializeStruct};
+use rocket_contrib::JSON;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct LastPingData {
