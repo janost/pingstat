@@ -89,7 +89,7 @@ case $GRAPHTYPE in
       echo "graph_scale no"
       echo "psucc.label Successful pings"
       echo "psucc.info Successful pings to ${TARGET}, ${PING_LAST_MINUTES} min"
-      echo "pfail.label Successful pings"
+      echo "pfail.label Failed pings"
       echo "pfail.info Failed pings to ${TARGET}, ${PING_LAST_MINUTES} min"
       exit 0
     fi
