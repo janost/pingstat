@@ -17,6 +17,9 @@ use std::time::Duration;
 use oping::Ping;
 use rusqlite::Connection;
 use rocket_contrib::JSON;
+use time::PreciseTime;
+
+const PING_INTERVAL: u64 = 500;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct LastPingData {
@@ -50,11 +53,16 @@ fn do_ping(ping: Ping) {
 fn start_ping(target: &str) {
     println!("Starting ping loop: {}", target);
     loop {
+        let start = PreciseTime::now();
         let mut ping = Ping::new();
         ping.add_host(target);
         ping.set_timeout(1.0);
         do_ping(ping);
-        thread::sleep(Duration::from_millis(500));
+        let end = PreciseTime::now();
+        let ping_time = start.to(end).num_milliseconds() as u64;
+        if ping_time < PING_INTERVAL {
+            thread::sleep(Duration::from_millis(PING_INTERVAL - ping_time));
+        }
     }
 }
 
