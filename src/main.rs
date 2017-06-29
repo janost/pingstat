@@ -52,9 +52,9 @@ fn start_ping(target: &str) {
     loop {
         let mut ping = Ping::new();
         ping.add_host(target);
-        ping.set_timeout(2.0);
+        ping.set_timeout(1.0);
         do_ping(ping);
-        thread::sleep(Duration::from_secs(1));
+        thread::sleep(Duration::from_millis(500));
     }
 }
 
