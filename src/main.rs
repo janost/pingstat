@@ -26,7 +26,11 @@ struct LastPingData {
     failed_percent: f64,
     avg_ms: f64,
     min_ms: f64,
-    max_ms: f64
+    max_ms: f64,
+    perc_99th: f64,
+    perc_95th: f64,
+    perc_90th: f64,
+    perc_50th: f64
 }
 
 fn do_ping(ping: Ping) {
@@ -85,16 +89,36 @@ fn last_mins(min: &str) -> JSON<Vec<LastPingData>> {
                                 p1.time >= STRFTIME('%Y-%m-%d %H:%M:%S',DATETIME('now', '-' || ? || ' minutes')) AND
                                 p1.success=1 GROUP BY p1.target").unwrap();
     let lastping_iter = stmt.query_map(&[&minutes, &minutes], |row| {
+        let target_ip : String = row.get(0);
+        let mut pingtimes = conn.prepare(
+            "SELECT latency_ms
+            FROM pingdata
+            WHERE
+            target = ? AND
+            time >= STRFTIME('%Y-%m-%d %H:%M:%S',DATETIME('now', '-' || ? || ' minutes')) AND
+            success=1
+            ORDER BY latency_ms"
+        ).unwrap();
+        let pings_iter = pingtimes.query_map(&[&target_ip, &minutes], |r2| {
+            r2.get(0)
+        }).unwrap();
+
+        let pings: Vec<_> = pings_iter.map(|res| res.unwrap()).collect();
+
         let s_count : i64 = row.get(1);
         let f_count : i64 = row.get(5);
         LastPingData {
-            target: row.get(0),
+            target: target_ip,
             success_count: s_count,
             avg_ms: row.get(2),
             min_ms: row.get(3),
             max_ms: row.get(4),
             failed_count: f_count,
-            failed_percent: (f_count as f64/(s_count as f64 + f_count as f64)) * 100.0
+            failed_percent: (f_count as f64/(s_count as f64 + f_count as f64)) * 100.0,
+            perc_99th: pings[((pings.len() - 1) as f64 * 0.99) as usize],
+            perc_95th: pings[((pings.len() - 1) as f64 * 0.95) as usize],
+            perc_90th: pings[((pings.len() - 1) as f64 * 0.90) as usize],
+            perc_50th: pings[((pings.len() - 1) as f64 * 0.50) as usize]
         }
     }).unwrap();
 
