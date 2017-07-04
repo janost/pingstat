@@ -41,14 +41,13 @@ struct LastPingData {
 
 fn do_ping(ping: Ping) {
     let conn = Connection::open("file::memory:?cache=shared").unwrap();
-    let mut stmt = conn.prepare("INSERT INTO pingdata (target,time,success,latency_ms) VALUES (?,?,?,?)").unwrap();
-    let ping_time = time::get_time();
+    let mut stmt = conn.prepare("INSERT INTO pingdata (target,success,latency_ms) VALUES (?,?,?)").unwrap();
     let responses = ping.send().unwrap();
     for resp in responses {
         if resp.dropped > 0 {
-            stmt.execute(&[&resp.address, &ping_time, &"0", &"0"]);
+            stmt.execute(&[&resp.address, &"0", &"0"]);
         } else {
-            stmt.execute(&[&resp.address, &ping_time, &"1", &resp.latency_ms]);
+            stmt.execute(&[&resp.address, &"1", &resp.latency_ms]);
         }
     }
 }
@@ -71,7 +70,7 @@ fn start_ping(target: &str) {
 
 fn db_cleanup() {
     let conn = Connection::open("file::memory:?cache=shared").unwrap();
-    match conn.execute("DELETE FROM pingdata WHERE time <= STRFTIME('%Y-%m-%d %H:%M:%S',DATETIME('now', '-' || ? || ' minutes'))", &[&10i32]) {
+    match conn.execute("DELETE FROM pingdata WHERE time <= STRFTIME('%Y-%m-%d %H:%M:%f',DATETIME('now', '-' || ? || ' minutes'))", &[&10i32]) {
             Ok(deleted) => println!("DB cleanup finished, {} rows were deleted.", deleted),
             Err(err) => println!("Failed to clean up database: {}", err),
         }
@@ -85,32 +84,32 @@ fn schedule_db_cleanup() {
     }
 }
 
-#[get("/last/<min>", format = "application/json")]
-fn last_mins(min: &str) -> JSON<Vec<LastPingData>> {
-    let minutes = min.parse::<i32>().unwrap();
+#[get("/last/<sec>", format = "application/json")]
+fn last_mins(sec: &str) -> JSON<Vec<LastPingData>> {
+    let seconds = sec.parse::<i32>().unwrap();
     let conn = Connection::open("file::memory:?cache=shared").unwrap();
     let mut stmt = conn.prepare("SELECT p1.target, COUNT(*), AVG(p1.latency_ms), MIN(p1.latency_ms), MAX(p1.latency_ms), IFNULL(p2.failed_count, 0)
                                 FROM pingdata p1
                                 LEFT JOIN
                                 (SELECT fq.target, COUNT(*) as failed_count
                                  FROM pingdata fq WHERE fq.success=0 AND
-                                 fq.time >= STRFTIME('%Y-%m-%d %H:%M:%S',DATETIME('now', '-' || ? || ' minutes'))
+                                 fq.time >= STRFTIME('%Y-%m-%d %H:%M:%f',DATETIME('now', '-' || ? || ' seconds'))
                                  GROUP BY fq.target) p2 ON p1.target=p2.target
                                 WHERE
-                                p1.time >= STRFTIME('%Y-%m-%d %H:%M:%S',DATETIME('now', '-' || ? || ' minutes')) AND
+                                p1.time >= STRFTIME('%Y-%m-%d %H:%M:%f',DATETIME('now', '-' || ? || ' seconds')) AND
                                 p1.success=1 GROUP BY p1.target").unwrap();
-    let lastping_iter = stmt.query_map(&[&minutes, &minutes], |row| {
+    let lastping_iter = stmt.query_map(&[&seconds, &seconds], |row| {
         let target_ip : String = row.get(0);
         let mut pingtimes = conn.prepare(
             "SELECT latency_ms
             FROM pingdata
             WHERE
             target = ? AND
-            time >= STRFTIME('%Y-%m-%d %H:%M:%S',DATETIME('now', '-' || ? || ' minutes')) AND
+            time >= STRFTIME('%Y-%m-%d %H:%M:%f',DATETIME('now', '-' || ? || ' seconds')) AND
             success=1
             ORDER BY latency_ms"
         ).unwrap();
-        let pings_iter = pingtimes.query_map(&[&target_ip, &minutes], |r2| {
+        let pings_iter = pingtimes.query_map(&[&target_ip, &seconds], |r2| {
             r2.get(0)
         }).unwrap();
 
@@ -148,7 +147,7 @@ fn main() {
     db.execute("CREATE TABLE pingdata (
                id              INTEGER PRIMARY KEY,
                target          VARCHAR(255) NOT NULL,
-               time            VARCHAR(255) NOT NULL,
+               time            DATETIME DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),
                success         INTEGER,
                latency_ms      REAL
                )", &[]).unwrap();
