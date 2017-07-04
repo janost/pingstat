@@ -103,7 +103,7 @@ case $GRAPHTYPE in
   count)
     if [ "$1" == "config" ]; then
       echo "graph_title Ping count - ${TARGET}, ${PING_LAST_MINUTES} min"
-      echo "graph_vlabel percent"
+      echo "graph_vlabel Number of pings"
       echo "graph_info Ping count - ${TARGET}, ${PING_LAST_MINUTES} min"
       echo "graph_category ping"
       echo "graph_args -l 0"
