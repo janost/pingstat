@@ -31,6 +31,9 @@ struct LastPingData {
     min_ms: f64,
     max_ms: f64,
     perc_99th: f64,
+    perc_98th: f64,
+    perc_97th: f64,
+    perc_96th: f64,
     perc_95th: f64,
     perc_90th: f64,
     perc_50th: f64
@@ -124,6 +127,9 @@ fn last_mins(min: &str) -> JSON<Vec<LastPingData>> {
             failed_count: f_count,
             failed_percent: (f_count as f64/(s_count as f64 + f_count as f64)) * 100.0,
             perc_99th: pings[((pings.len() - 1) as f64 * 0.99) as usize],
+            perc_98th: pings[((pings.len() - 1) as f64 * 0.98) as usize],
+            perc_97th: pings[((pings.len() - 1) as f64 * 0.97) as usize],
+            perc_96th: pings[((pings.len() - 1) as f64 * 0.96) as usize],
             perc_95th: pings[((pings.len() - 1) as f64 * 0.95) as usize],
             perc_90th: pings[((pings.len() - 1) as f64 * 0.90) as usize],
             perc_50th: pings[((pings.len() - 1) as f64 * 0.50) as usize]

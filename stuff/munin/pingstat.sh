@@ -39,6 +39,18 @@ case $GRAPHTYPE in
       echo "p99.warning ${PING_MAX_WARNING}"
       echo "p99.critical ${PING_MAX_CRITICAL}"
       echo "p99.info 99th percentile ping to ${TARGET}, ${PING_LAST_MINUTES} min"
+      echo "p98.label 98th percentile"
+      echo "p98.warning ${PING_MAX_WARNING}"
+      echo "p98.critical ${PING_MAX_CRITICAL}"
+      echo "p98.info 98th percentile ping to ${TARGET}, ${PING_LAST_MINUTES} min"
+      echo "p97.label 97th percentile"
+      echo "p97.warning ${PING_MAX_WARNING}"
+      echo "p97.critical ${PING_MAX_CRITICAL}"
+      echo "p97.info 97th percentile ping to ${TARGET}, ${PING_LAST_MINUTES} min"
+      echo "p96.label 96th percentile"
+      echo "p96.warning ${PING_MAX_WARNING}"
+      echo "p96.critical ${PING_MAX_CRITICAL}"
+      echo "p96.info 96th percentile ping to ${TARGET}, ${PING_LAST_MINUTES} min"
       echo "p95.label 95th percentile"
       echo "p95.warning ${PING_AVG_WARNING}"
       echo "p95.critical ${PING_AVG_CRITICAL}"
@@ -73,6 +85,15 @@ case $GRAPHTYPE in
     echo
     printf "p95.value "
     printf "%.2f" $(echo ${JDATA} | jq ".[] | select(.target==\"${TARGET}\")[\"perc_95th\"]" | bc -l)
+    echo
+    printf "p96.value "
+    printf "%.2f" $(echo ${JDATA} | jq ".[] | select(.target==\"${TARGET}\")[\"perc_96th\"]" | bc -l)
+    echo
+    printf "p97.value "
+    printf "%.2f" $(echo ${JDATA} | jq ".[] | select(.target==\"${TARGET}\")[\"perc_97th\"]" | bc -l)
+    echo
+    printf "p98.value "
+    printf "%.2f" $(echo ${JDATA} | jq ".[] | select(.target==\"${TARGET}\")[\"perc_98th\"]" | bc -l)
     echo
     printf "p99.value "
     printf "%.2f" $(echo ${JDATA} | jq ".[] | select(.target==\"${TARGET}\")[\"perc_99th\"]" | bc -l)
